@@ -45,7 +45,7 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
         public bool TopicExists(string topic)
         {
             s_logger.LogDebug("Checking if topic {Topic} exists...", topic);
-            
+
             bool result;
 
             try
@@ -54,7 +54,7 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
             }
             catch (Exception e)
             {
-                s_logger.LogError(e,"Failed to check if topic {Topic} exists.", topic);
+                s_logger.LogError(e, "Failed to check if topic {Topic} exists.", topic);
                 throw;
             }
 
@@ -66,8 +66,69 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
             {
                 s_logger.LogWarning("Topic {Topic} does not exist.", topic);
             }
-            
+
             return result;
+        }
+        
+        /// <summary>
+        /// Check if a Queue exists
+        /// </summary>
+        /// <param name="queue">The name of the Queue.</param>
+        /// <returns>True if the Queue exists.</returns>
+        public bool QueueExists(string queue)
+        {
+            s_logger.LogDebug("Checking if queue {Queue} exists...", queue);
+
+            bool result;
+
+            try
+            {
+                result = _administrationClient.QueueExistsAsync(queue).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                s_logger.LogError(e, "Failed to check if queue {Queue} exists.", queue);
+                throw;
+            }
+
+            if (result)
+            {
+                s_logger.LogDebug("Topic {Queue} exists.", queue);
+            }
+            else
+            {
+                s_logger.LogWarning("Topic {Queue} does not exist.", queue);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Create a Queue
+        /// </summary>
+        /// <param name="queue"></param>
+        /// <param name="subscriptionConfiguration"></param>
+        public void CreateQueue(string queue, AzureServiceBusSubscriptionConfiguration subscriptionConfiguration)
+        {
+            s_logger.LogInformation("Creating queue {Queue}...", queue);
+
+            try
+            {
+                _administrationClient.CreateQueueAsync(new CreateQueueOptions(queue)
+                {
+                    MaxDeliveryCount = subscriptionConfiguration.MaxDeliveryCount,
+                    DeadLetteringOnMessageExpiration = subscriptionConfiguration.DeadLetteringOnMessageExpiration,
+                    LockDuration = subscriptionConfiguration.LockDuration,
+                    DefaultMessageTimeToLive = subscriptionConfiguration.DefaultMessageTimeToLive
+                }).GetAwaiter().GetResult();
+            }
+            catch (Exception e)
+            {
+                s_logger.LogError(e, "Failed to create queue {Queue}.", queue);
+                throw;
+            }
+
+            s_logger.LogInformation("Queue {Queue} created.", queue);
         }
 
         /// <summary>
@@ -84,10 +145,10 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
             }
             catch (Exception e)
             {
-                s_logger.LogError(e,"Failed to create topic {Topic}.", topic);
+                s_logger.LogError(e, "Failed to create topic {Topic}.", topic);
                 throw;
             }
-            
+
             s_logger.LogInformation("Topic {Topic} created.", topic);
         }
 
@@ -105,7 +166,7 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
             }
             catch (Exception e)
             {
-                s_logger.LogError(e,"Failed to delete Topic {Topic}", topic);
+                s_logger.LogError(e, "Failed to delete Topic {Topic}", topic);
             }
         }
 
@@ -117,27 +178,30 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
         /// <returns>True if the subscription exists on the specified Topic.</returns>
         public bool SubscriptionExists(string topicName, string subscriptionName)
         {
-            s_logger.LogDebug("Checking if subscription {ChannelName} for topic {Topic} exists...", subscriptionName, topicName);
+            s_logger.LogDebug("Checking if subscription {ChannelName} for topic {Topic} exists...", subscriptionName,
+                topicName);
 
             bool result;
 
             try
             {
-                result =_administrationClient.SubscriptionExistsAsync(topicName, subscriptionName).Result;
+                result = _administrationClient.SubscriptionExistsAsync(topicName, subscriptionName).Result;
             }
             catch (Exception e)
             {
-                s_logger.LogError(e, "Failed to check if subscription {ChannelName} for topic {Topic} exists.", subscriptionName, topicName);
+                s_logger.LogError(e, "Failed to check if subscription {ChannelName} for topic {Topic} exists.",
+                    subscriptionName, topicName);
                 throw;
             }
-            
+
             if (result)
             {
                 s_logger.LogDebug("Subscription {ChannelName} for topic {Topic} exists.", subscriptionName, topicName);
             }
             else
             {
-                s_logger.LogWarning("Subscription {ChannelName} for topic {Topic} does not exist.", subscriptionName, topicName);
+                s_logger.LogWarning("Subscription {ChannelName} for topic {Topic} does not exist.", subscriptionName,
+                    topicName);
             }
 
             return result;
@@ -149,7 +213,8 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
         /// <param name="topicName">The name of the Topic.</param>
         /// <param name="subscriptionName">The name of the Subscription.</param>
         /// <param name="subscriptionConfiguration">The configuration options for the subscriptions.</param>
-        public void CreateSubscription(string topicName, string subscriptionName, AzureServiceBusSubscriptionConfiguration subscriptionConfiguration)
+        public void CreateSubscription(string topicName, string subscriptionName,
+            AzureServiceBusSubscriptionConfiguration subscriptionConfiguration)
         {
             CreateSubscriptionAsync(topicName, subscriptionName, subscriptionConfiguration).Wait();
         }
@@ -169,23 +234,25 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
         private void Initialise()
         {
             s_logger.LogDebug("Initialising new management client wrapper...");
-            
+
             try
             {
                 _administrationClient = _clientProvider.GetServiceBusAdministrationClient();
             }
             catch (Exception e)
             {
-                s_logger.LogError(e,"Failed to initialise new management client wrapper.");
+                s_logger.LogError(e, "Failed to initialise new management client wrapper.");
                 throw;
             }
 
             s_logger.LogDebug("New management client wrapper initialised.");
         }
-        
-        private async Task CreateSubscriptionAsync(string topicName, string subscriptionName, AzureServiceBusSubscriptionConfiguration subscriptionConfiguration)
+
+        private async Task CreateSubscriptionAsync(string topicName, string subscriptionName,
+            AzureServiceBusSubscriptionConfiguration subscriptionConfiguration)
         {
-            s_logger.LogInformation("Creating subscription {ChannelName} for topic {Topic}...", subscriptionName, topicName);
+            s_logger.LogInformation("Creating subscription {ChannelName} for topic {Topic}...", subscriptionName,
+                topicName);
 
             if (!TopicExists(topicName))
             {
@@ -201,7 +268,8 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
             };
 
             var ruleOptions = string.IsNullOrEmpty(subscriptionConfiguration.SqlFilter)
-                ? new CreateRuleOptions() : new CreateRuleOptions("sqlFilter",new SqlRuleFilter(subscriptionConfiguration.SqlFilter));
+                ? new CreateRuleOptions()
+                : new CreateRuleOptions("sqlFilter", new SqlRuleFilter(subscriptionConfiguration.SqlFilter));
 
             try
             {
@@ -209,11 +277,13 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
             }
             catch (Exception e)
             {
-                s_logger.LogError(e, "Failed to create subscription {ChannelName} for topic {Topic}.", subscriptionName, topicName);
+                s_logger.LogError(e, "Failed to create subscription {ChannelName} for topic {Topic}.", subscriptionName,
+                    topicName);
                 throw;
             }
-            
-            s_logger.LogInformation("Subscription {ChannelName} for topic {Topic} created.", subscriptionName, topicName);
+
+            s_logger.LogInformation("Subscription {ChannelName} for topic {Topic} created.", subscriptionName,
+                topicName);
         }
     }
 }

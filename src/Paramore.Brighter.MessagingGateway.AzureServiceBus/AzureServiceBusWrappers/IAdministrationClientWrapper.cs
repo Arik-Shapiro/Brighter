@@ -42,7 +42,8 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
         /// <param name="topicName">The name of the Topic.</param>
         /// <param name="subscriptionName">The name of the Subscription.</param>
         /// <param name="subscriptionConfiguration">The configuration options for the subscriptions.</param>
-        void CreateSubscription(string topicName, string subscriptionName, AzureServiceBusSubscriptionConfiguration subscriptionConfiguration);
+        void CreateSubscription(string topicName, string subscriptionName,
+            AzureServiceBusSubscriptionConfiguration subscriptionConfiguration);
 
         /// <summary>
         /// Reset the Connection.
@@ -57,5 +58,19 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus.AzureServiceBusWrap
         /// <param name="cancellationToken">The Cancellation Token.</param>
         Task<SubscriptionProperties> GetSubscriptionAsync(string topicName, string subscriptionName,
             CancellationToken cancellationToken = default);
+
+        /// <summary>
+        /// Check if a Topic exists
+        /// </summary>
+        /// <param name="queue">The name of the queue.</param>
+        /// <returns>True if the Queue exists.</returns>>
+        bool QueueExists(string queue);
+
+        /// /// <summary>
+        /// Create a Queue
+        /// </summary>
+        /// <param name="queue">The name of the Queue</param>
+        /// <param name="subscriptionConfiguration"></param>
+        void CreateQueue(string queue, AzureServiceBusSubscriptionConfiguration subscriptionConfiguration);
     }
 }

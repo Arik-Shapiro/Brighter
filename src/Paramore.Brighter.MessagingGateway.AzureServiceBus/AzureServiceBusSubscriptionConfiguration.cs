@@ -24,6 +24,11 @@ namespace Paramore.Brighter.MessagingGateway.AzureServiceBus
         /// <summary>
         /// A Sql Filter to apply to the subscription
         /// </summary>
-        public string SqlFilter = String.Empty;
+        public string SqlFilter = string.Empty;
+        /// <summary>
+        /// Uses ASB Queue instead of ASB Subscription
+        /// SqlFilter is Ignored when set to true
+        /// </summary>
+        public bool UseQueue { get; set; } = false;
     }
 }
